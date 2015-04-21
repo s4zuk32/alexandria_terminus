@@ -1,0 +1,52 @@
+*setwall "<map name>",<x>,<y>,<size>,<dir>,<shootable>,"<name>";
+"<map name>" = String: of the map you want the wall to be on.
+	<x> = Int: for the x cord. ( can be found using /where )
+	<y> = Int: for the y cord. ( can be found using /where )
+	<size> = Int: The amount of cells you want the wall to extend into from the point of npc.
+	<dir> = Int: Direction ( 0=N, 1=NW, 2=W, 3=SW, 4=S, 5=SE, 6=E, 7=NE )
+	<shootable> = Int: 1=Yes 0=No ( Allows sniping over wall. )
+	"<name>" = String: Just a variable used to locate the wall for deleting it.
+
+
+
+barricada mvp centro lado de abajo
+146 142 6 ->
+
+barricada mvp pasillo derecho 
+185 150 6 ^
+
+npc información al mvp
+189 155 mirando hacia abajo
+
+crytal buff mvp derecho
+173 99
+
+barricada crystal derecho
+183 104 3 abajo
+
+barricada mvp derecho
+254 116 6 ->
+
+
+npc información inicial?
+152 43 abajo
+
+
+barricada mvp izquierdo
+51 99 6 <-
+
+
+barricada crystal buff izquierdo
+116 101 4 ->
+
+crystal izquierdo
+109 94
+
+NPC informacion de direcciones
+148 178
+
+NPC tiranitar
+149 241
+
+
+

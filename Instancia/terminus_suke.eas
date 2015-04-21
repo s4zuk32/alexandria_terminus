@@ -1,0 +1,515 @@
+// recordatorio: setear mapflags y anti skills
+
+
+// Instancia Dragon's Terminus
+// Traverssss ro
+/* 
+mobs: 	2950 un dragon azul
+	2977 un dragon rojo
+	2976 un dragon volador pequeño
+	quiza un draco...
+	quiza un detale
+	
+
+	2955 unas weas negras
+	2952 otra wea negra
+	2948 otra wea negra
+*/
+
+
+
+///////////////////////////////////////
+/* Entrada y Registro */
+///////////////////////////////////////
+
+
+prontera,155,178,0	script	Dragon Piece#Termi	406,{
+
+	set .@party_id,getcharid(1);
+	set .@party_name$,getpartyname(.@party_id);
+	set .@ins_name_mes$,"^ff0000Dragon's Terminus^000000";
+	set .@ins_name$,"Dragon's Terminus";
+	set .@party_min,1; //(Recomendado 7) Cantidad de players minimos para crear y entrar a la instancia.
+	set .@checkquest_terminus,60358; // ID quest Terminus quest_db
+
+	erasequest .@checkquest_terminus;
+
+
+	mes "[ "+.@ins_name_mes$+" ]";
+	if (!instance_check_party(.@party_id,.@party_min,90,99)) {
+		mes "- Solo partys entre level ^ff000030 ~ 80^000000 pueden entrar a la instancia.";
+		mes "- Cantidad de usuarios minimos en la party para entrar son ^ff0000"+.@party_min+"^000000.";
+		close;
+	}
+
+	set .@terminustime,checkquest(.@checkquest_terminus,PLAYTIME);
+	if (.@terminustime == -1) {
+		if (getcharid(0) == getpartyleader(.@party_id,2)) {
+			mes "Party confirmada. Desea reservar entrada a "+.@ins_name_mes$+"?";
+			next;
+			switch(select("Reservar "+.@ins_name$+":Entrar a la instancia:Cancelar")) {
+			case 1:
+				mes "[ "+.@ins_name_mes$+" ]";
+				if (instance_create(.@ins_name$) < 0) {
+					
+					mes "Party Name: "+.@party_name$;
+					mes "Party Leader: "+strcharinfo(0);
+					mes "^0000ff"+.@ins_name_mes$+" ^000000 - Ya existe una reserva. Fail";
+					close;
+				}
+				mes "^0000ff"+.@ins_name_mes$+"^000000- Intentando reservar una entrada.";
+				mes "Despues de hacer la reservacion, tiene que seleccionar 'Entrar a la instancia' desde el menu si desea entrar a "+.@ins_name_mes$+".";
+				close;
+			case 2:
+				callsub L_Enter,0;
+			case 3:
+				close;
+			}
+		}
+		if(select("Entrar a "+ .@ins_name_mes$ + ":Cancelar") == 2)
+			end;
+		callsub L_Enter,1;
+	} else if (.@terminustime == 0 || .@terminustime == 1) {
+		mes "Solo puedes entrar a la instancia si esta a sido generada por el party lider.";
+		next;
+		if(select("Entrar a "+.@ins_name_mes$+":Cancelar") == 2)
+			close;
+		callsub L_Enter,0;
+	} else if (.@terminustime == 2) {
+		mes "Todos los registros y secuelas relacionadas con la instancia "+.@ins_name_mes$+" han sido eliminadas. Ahora puede volver a generar o volver a entrar a la instancia.";
+		erasequest .@checkquest_terminus;
+		close;
+	}
+	mes "[ "+.@ins_name_mes$+" ]";
+	mes "Para realizar una reserva a la instancia "+ .@ins_name_mes$ +" deberas ser el party lider y contar con "+ .@party_min +" miembros.";
+	close;
+L_Enter:
+	// Se borraran, wtf.
+	set .@party_id,getcharid(1);
+	set .@party_name$,getpartyname(.@party_id);
+	set .@ins_name_mes$,"^ff0000Dragon's Terminus^000000";
+	set .@ins_name$,"Dragon's Terminus";
+	set .@party_min,1; //(Recomendado 7) Cantidad de players minimos para crear y entrar a la instancia.
+	set .@checkquest_terminus,60358; // ID quest Terminus quest_db
+
+	switch(instance_enter("Dragon's Terminus")) {
+	case 3:
+		mes "[ "+.@ins_name_mes$+" ]";
+		mes "A sucedio un error desconocido.";
+		close;
+	case 2:
+		mes "[ "+.@ins_name_mes$+" ]";
+		mes "La instancia  "+ .@ins_name$ +" no existe.";
+		mes "La instancia fue destruida por el party lider, o debido al tiempo limite. Intentelo denuevo luego de X horas.";
+		close;
+	case 1:
+		mes "[ "+.@ins_name_mes$+" ]";
+		mes "Debes estar en una party.";
+		close;
+	case 0:
+		mapannounce "prontera","[ "+ strcharinfo(0)+" ] de la party [ "+.@party_name$+" ], esta entrando a la instancia "+.@ins_name$+".",bc_map,"0x00ff99";
+		if (checkquest(.@checkquest_terminus) == -1) setquest .@checkquest_terminus;
+		if (getarg(0) == 0) close;
+		else end;
+	}
+
+}
+ 
+///////////////////////////
+/* NPCs de Informacion */
+///////////////////////////
+
+1@term,148,178,5	script	Sign#term	835,{
+
+    mes " [ ^FE642EPeligro!^000000 ]";
+    mes " ";
+    mes " - Norte: (NPC) ^04B404Tyranitar^000000";
+    mes " - Oeste: (MVP) ^FE2E2ECharizard^000000";
+    mes " - Este:  (MVP) ^2E2EFEBlastoise^000000";
+    close;
+
+}
+
+
+///////////////////////////////
+/* Crystales Buffers  */
+///////////////////////////////
+
+1@term,109,94,5	script	Crystal Buffer#term1	1915,{
+
+        dispbottom "Has obtenido el red buff. (?)";
+        end;
+OnInstanceInit:
+    initnpctimer;
+    end;
+OnTimer2000:
+    misceffect 173;
+    stopnpctimer;
+    initnpctimer;
+    end;
+OnDisable:
+    disablenpc instance_npcname("Crystal Buffer#term1");
+    end;
+}
+
+1@term,173,99,5	script	Crystal Buffer#term2	1914,{
+
+        dispbottom "Has obtenido el blue buff. (?)";
+        end;
+OnInstanceInit:
+    initnpctimer;
+    end;
+OnTimer2000:
+    misceffect 174;
+    stopnpctimer;
+    initnpctimer;
+    end;
+OnDisable:
+    disablenpc instance_npcname("Crystal Buffer#term2");
+    end;
+}
+
+//////////////////////////////////
+/* Spawn monster */
+//////////////////////////////////
+
+
+//	2955 unas weas negras
+//	2952 otra wea negra
+//	2948 otra wea negra
+
+1@term,1,1,0	script	#mob_term	844,{  // mob term
+
+OnInstanceInit:
+    //camino derecho de la entrada
+    monstersize instance_mapname("1@term"),0,0,"Mob-Tipo 1",2955,55,2,instance_npcname("#mob_term")+"::OnMyMobDead";
+    monstersize instance_mapname("1@term"),0,0,"Mob-Tipo 2",2952,55,2,instance_npcname("#mob_term")+"::OnMyMobDead";
+    monstersize instance_mapname("1@term"),0,0,"Mob-Tipo 3",2948,55,2,instance_npcname("#mob_term")+"::OnMyMobDead";    
+    end;
+
+OnDisable:
+	killmonster instance_mapname("1@term"),instance_npcname("#mob_term")+"::OnMyMobDead";
+	end;
+OnMyMobDead:
+    end;
+
+}
+
+1@term,1,1,0	script	#mvp1_term	844,{  // controlador mvp 1
+    end;
+OnInstanceInit:
+    monstersize instance_mapname("1@term"),49,50,"MVP 1",2976,1,2,instance_npcname("#mvp1_term")+"::OnMyMobDead";
+    end;
+    
+OnDisable:
+	killmonster instance_mapname("1@term"),instance_npcname("#mvp1_term")+"::OnMyMobDead";
+	end;
+
+OnMyMobDead:
+    donpcevent instance_npcname("#b_m1_1")+"::OnDisable"; // disable barricadas lado izquierdo
+    donpcevent instance_npcname("#b_c1_1")+"::OnDisable"; // disable barricadas cristal izquierdo
+	end;
+}
+    
+1@term,1,1,0	script	#mvp2_term	844,{  // controlador mvp 2
+    end;
+OnInstanceInit:
+    monstersize instance_mapname("1@term"),254,42,"MVP 2",2950,1,2,instance_npcname("#mvp2_term")+"::OnMyMobDead";
+    end;
+    
+OnDisable:
+	killmonster instance_mapname("1@term"),instance_npcname("#mvp2_term")+"::OnMyMobDead";
+	end;
+
+OnMyMobDead:
+    donpcevent instance_npcname("#b_m2_1")+"::OnDisable";  // disable barricadas lado derecho
+    donpcevent instance_npcname("#b_c2_1")+"::OnDisable"; // disable barricadas cristal izquierdo
+	end;
+}
+
+
+1@term,149,241,5	script	Tyranitar#term	2942 ,{
+
+    mes " [ ^04B404Tyranitar^000000 ]";
+    mes " ";
+    mes "Rawwwwww";
+    mes "Si obtener el fuego y agua querés, dominar al mismo tiempo debés.";
+    mes "(?)";
+    mes "Rawwwwwwwwwww";
+    // Quiza darle un buff extra aca.
+    close;
+
+OnInstanceInit:
+    monstersize instance_mapname("1@term"),45,255,"Charizard",2944,1,2,instance_npcname("Tyranitar#term")+"::OnMyMobDead";
+    monstersize instance_mapname("1@term"),255,245,"Blastoise",2943,1,2,instance_npcname("Tyranitar#term")+"::OnMyMobDead";
+    end;
+OnDisable:
+	killmonster instance_mapname("1@term"),instance_npcname("Tyranitar#term")+"::OnMyMobDead";
+	end;
+OnMyMobDead:
+    set .@map$, instance_mapname("1@term");
+	set .@mvp_dead, 2 - mobcount(.@map$,instance_npcname("Tyranitar#term")+"::OnMyMobDead");
+    if(.@mvp_dead == 2){
+        stopnpctimer;
+        donpcevent instance_npcname("#b_m5_r1")+"::OnDisable";  // eliminar barricadas mvp centro
+        donpcevent instance_npcname("#b_m5_d1")+"::OnDisable";  // eliminar barricadas mvp centro
+        mapannounce instance_mapname("1@term"), "~ Se a escuchado un derrumbe cerca del centro del mapa ~",bc_map,"0x77ff77";	
+    
+    }
+    else if(.@mvp_dead == 1){
+            initnpctimer;  // empieza el timer para que maten a los dos al mismo tiempo
+    }
+    end;
+OnTimer10:
+    mapannounce instance_mapname("1@term"), "[ ~ 15 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer1000:
+    mapannounce instance_mapname("1@term"), "[ ~ 14 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer2000:
+    mapannounce instance_mapname("1@term"), "[ ~ 13 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer3000:
+    mapannounce instance_mapname("1@term"), "[ ~ 12 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer4000:
+    mapannounce instance_mapname("1@term"), "[ ~ 11 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer5000:
+    mapannounce instance_mapname("1@term"), "[ ~ 10 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer6000:
+    mapannounce instance_mapname("1@term"), "[ ~ 9 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer7000:
+    mapannounce instance_mapname("1@term"), "[ ~ 8 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer8000:
+    mapannounce instance_mapname("1@term"), "[ ~ 7 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer9000:
+    mapannounce instance_mapname("1@term"), "[ ~ 6 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer10000:
+    mapannounce instance_mapname("1@term"), "[ ~ 5 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer11000:
+    mapannounce instance_mapname("1@term"), "[ ~ 4 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer12000:
+    mapannounce instance_mapname("1@term"), "[ ~ 3 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer13000:
+    mapannounce instance_mapname("1@term"), "[ ~ 2 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer14000:
+    mapannounce instance_mapname("1@term"), "[ ~ 1 ~ ]",bc_map,"0xff4444";
+	end;			
+OnTimer15000:
+    stopnpctimer;
+    mapannounce instance_mapname("1@term"), "[ ~ Failed. Try Again. ~ ]",bc_map,"0xff4444";
+	
+    killmonster instance_mapname("1@term"),instance_npcname("Tyranitar#term")+"::OnMyMobDead";
+    donpcevent instance_npcname("Tyranitar#term")+"::OnInstanceInit";  // re spawnear mobs.
+    end;			
+    
+}
+    
+1@term,152,43,5	script	Informacion#term	53,{ 
+
+    mes "Dragon's Terminus";
+    mes "Para continuar debes derrotar al mvp de la derecha o izquierda. cada uno te abrirá un camino distinto y habilitará el camino al crystal buff correspondiente";
+    mes "derrotar a los dos y obtener los dos crystales es opcional";
+    mes "este texto es random y hay que cambiarlo";
+    mes "tambien mostrará la ubicacion y direccion hacia los mvp en el minimapa"; 
+    close;
+
+OnInstanceInit:
+    monstersize instance_mapname("1@term"),149,153,"Terminus",2977,1,2,instance_npcname("Informacion#term")+"::OnMyMobDead";
+    end;
+OnDisable:
+    killmonster instance_mapname("1@term"),instance_npcname("Informacion#term")+"::OnMyMobDead";
+    end;
+OnMyMobDead:
+    announce strcharinfo(0)+" y su party [ "+ getpartyname(getcharid(1)) +" ] han completado Dragon's Terminus.",0,0xFFBF00;
+    donpcevent instance_npcname("#warpterm")+"::OnEnable"; 
+    donpcevent instance_npcname("#mob_term")+"::OnDisable"; 
+    donpcevent instance_npcname("#mvp1_term")+"::OnDisable"; 
+    donpcevent instance_npcname("#mvp2_term")+"::OnDisable"; 
+    initnpctimer;
+    end;
+OnTimer5000:
+    mapannounce instance_mapname("1@term"), "[ ~ Valientes guerreros, lo han logrado!~ ]",bc_map,"0xff4444";
+    end;
+OnTimer8000:
+    mapannounce instance_mapname("1@term"), "[ ~ Se abrio un warp de salida. Ahora se joden =) ~ ]",bc_map,"0xff4444";
+    stopnpctimer;
+    end;
+}  
+
+//////////////////////////////////
+ /* Warp de salida  */
+//////////////////////////////////
+
+1@term,149,40,0	script	#warpterm	45,2,2,{
+	end;
+
+OnInstanceInit:
+	disablenpc instance_npcname("#warpterm");
+	end;
+
+OnEnable:
+	enablenpc instance_npcname("#warpterm");
+	end;
+
+OnTouch_:
+	warp "prontera",150,150;
+    end;
+}
+
+
+//////////////////////////////////
+ /* Barricadas y Setwall  */
+//////////////////////////////////
+
+1@term,146,142,6	script	#b_m5_d1	1905,{  // barricade mvp 5 down
+    end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),146,142,6,6,0,instance_mapname("1@term")+"mvp5down";
+    end;
+OnDisable:
+    delwall  instance_mapname("1@term")+"mvp5down";
+    
+    disablenpc instance_npcname("#b_m5_d2");
+    disablenpc instance_npcname("#b_m5_d3");
+    disablenpc instance_npcname("#b_m5_d4");
+    disablenpc instance_npcname("#b_m5_d5");
+    disablenpc instance_npcname("#b_m5_d6");
+    disablenpc instance_npcname("#b_m5_d1");
+    end;
+}
+
+1@term,185,150,6	script	#b_m5_r1	1905,{  // barricade mvp 5 right
+    end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),185,150,6,0,0,instance_mapname("1@term")+"mvp5right";
+    end;
+OnDisable:
+    delwall  instance_mapname("1@term")+"mvp5right";
+    
+    disablenpc instance_npcname("#b_m5_r2");
+    disablenpc instance_npcname("#b_m5_r3");
+    disablenpc instance_npcname("#b_m5_r4");
+    disablenpc instance_npcname("#b_m5_r5");
+    disablenpc instance_npcname("#b_m5_r6");
+    disablenpc instance_npcname("#b_m5_r1");
+    end;
+}
+
+1@term,183,104,6	script	#b_c2_1	1905,{  // barricade crystal 2 (derecho)
+        end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),183,104,3,4,0,instance_mapname("1@term")+"crystal2";
+    end;
+OnDisable:
+    delwall  instance_mapname("1@term")+"crystal2";
+    
+    disablenpc instance_npcname("#b_c2_2");
+    disablenpc instance_npcname("#b_c2_3");
+    disablenpc instance_npcname("#b_c2_1");
+    end;
+}
+
+                                                    
+1@term,254,116,6	script	#b_m2_1	1905,{  // barricade mvp2 abajo derecha
+            end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),254,116,6,6,0,instance_mapname("1@term")+"mvp2"; 
+    end;
+OnDisable: 
+    mapannounce instance_mapname("1@term"), "~ Se a escuchado un derrumbe muy cerca de aqui.~",bc_map,"0x77ff77";	
+    delwall  instance_mapname("1@term")+"mvp2";
+    disablenpc instance_npcname("#b_m2_2");
+    disablenpc instance_npcname("#b_m2_3");
+    disablenpc instance_npcname("#b_m2_4");
+    disablenpc instance_npcname("#b_m2_5");
+    disablenpc instance_npcname("#b_m2_6");
+    disablenpc instance_npcname("#b_m2_1");
+    end;
+}
+
+                                                   
+1@term,51,99,6	script	#b_m1_1	1905,{  // barricade mvp1 abajo izquierda
+   end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),51,99,6,2,0,instance_mapname("1@term")+"mvp1";
+    end;
+OnDisable:
+    mapannounce instance_mapname("1@term"), "~ Se a escuchado un derrumbe muy cerca de aqui.~",bc_map,"0x77ff77";
+    delwall  instance_mapname("1@term")+"mvp1";
+    disablenpc instance_npcname("#b_m1_2");
+    disablenpc instance_npcname("#b_m1_3");
+    disablenpc instance_npcname("#b_m1_4");
+    disablenpc instance_npcname("#b_m1_5");
+    disablenpc instance_npcname("#b_m1_6");
+    disablenpc instance_npcname("#b_m1_1");
+    end;
+}
+
+                                                 
+1@term,116,101,6	script	#b_c1_1	1905,{  // barricade crystal 1
+   end;
+OnInstanceInit:
+    setwall instance_mapname("1@term"),116,101,4,6,0,instance_mapname("1@term")+"crystal1";
+    end;
+OnDisable:
+    delwall  instance_mapname("1@term")+"crystal1";
+    
+    disablenpc instance_npcname("#b_c1_2");
+    disablenpc instance_npcname("#b_c1_3");
+    disablenpc instance_npcname("#b_c1_4");
+    disablenpc instance_npcname("#b_c1_1");
+    end;
+}
+
+
+1@term,1,1,6	script	Barricade#term::bdefault	1905,{  // BARRICADA DEFAULT PARA DUPLICAR
+end;
+}
+
+
+1@term,147,142,6	duplicate(bdefault)	#b_m5_d2	1905
+1@term,148,142,6	duplicate(bdefault)	#b_m5_d3	1905
+1@term,149,142,6	duplicate(bdefault)	#b_m5_d4	1905
+1@term,150,142,6	duplicate(bdefault)	#b_m5_d5	1905
+1@term,151,142,6	duplicate(bdefault)	#b_m5_d6	1905
+
+1@term,185,151,6	duplicate(bdefault)	#b_m5_r2	1905
+1@term,185,152,6	duplicate(bdefault)	#b_m5_r3	1905
+1@term,185,153,6	duplicate(bdefault)	#b_m5_r4	1905
+1@term,185,154,6	duplicate(bdefault)	#b_m5_r5	1905
+1@term,185,155,6	duplicate(bdefault)	#b_m5_r6	1905
+
+1@term,183,103,6	duplicate(bdefault)	#b_c2_2	1905
+1@term,183,102,6	duplicate(bdefault)	#b_c2_3	1905
+
+
+1@term,255,116,6	duplicate(bdefault)	#b_m2_2	1905 
+1@term,256,116,6	duplicate(bdefault)	#b_m2_3	1905
+1@term,257,116,6	duplicate(bdefault)	#b_m2_4	1905
+1@term,258,116,6	duplicate(bdefault)	#b_m2_5	1905
+1@term,259,116,6	duplicate(bdefault)	#b_m2_6	1905
+
+1@term,50,99,6	duplicate(bdefault)	#b_m1_2	1905 
+1@term,49,99,6	duplicate(bdefault)	#b_m1_3	1905 
+1@term,48,99,6	duplicate(bdefault)	#b_m1_4	1905 
+1@term,47,99,6	duplicate(bdefault)	#b_m1_5	1905 
+1@term,46,99,6	duplicate(bdefault)	#b_m1_6	1905 
+
+1@term,117,101,6	duplicate(bdefault)	#b_c1_2	1905 
+1@term,118,101,6	duplicate(bdefault)	#b_c1_3	1905 
+1@term,119,101,6	duplicate(bdefault)	#b_c1_4	1905 
+
+
+
+1@term	mapflag	mvpdistance
